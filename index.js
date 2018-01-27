@@ -27,17 +27,6 @@ class SourceCode {
 
 }
 
-const generatedFile = process.argv[2];
-const sourceMapFile = process.argv[2] + ".map";
-const sourceFile = process.argv[3];
-const desiredSourceId = process.argv[4];
-
-const rawSourceMap = JSON.parse(fs.readFileSync(sourceMapFile, 'utf8'));
-const consumer = new SourceMapConsumer(rawSourceMap);
-
-const originalCode = new SourceCode(fs.readFileSync(sourceFile, 'utf8').toString());
-const generatedCode = new SourceCode(fs.readFileSync(generatedFile, 'utf8').toString());
-
 class OffsetMappings {
 
     constructor(consumer, generatedCode, originalCode) {
@@ -96,16 +85,6 @@ class OffsetMappings {
 
 }
 
-const mappings = new OffsetMappings(consumer, generatedCode, originalCode);
-if (!mappings.hasSourceId(desiredSourceId)) {
-    console.log(chalk.red(`No mappings for ${desiredSourceId} in this mapping file`));
-    console.log("Found the following source IDs:");
-    mappings.getSourceIds().forEach(id => console.log("- " + id));
-    process.exit(1);
-}
-
-console.log(`--> mappings for ${desiredSourceId}`);
-
 class GeneratedOffsets {
 
     constructor(mappings) {
@@ -148,6 +127,27 @@ class GeneratedOffsets {
     }
 
 }
+
+const generatedFile = process.argv[2];
+const sourceMapFile = process.argv[2] + ".map";
+const sourceFile = process.argv[3];
+const desiredSourceId = process.argv[4];
+
+const rawSourceMap = JSON.parse(fs.readFileSync(sourceMapFile, 'utf8'));
+const consumer = new SourceMapConsumer(rawSourceMap);
+
+const originalCode = new SourceCode(fs.readFileSync(sourceFile, 'utf8').toString());
+const generatedCode = new SourceCode(fs.readFileSync(generatedFile, 'utf8').toString());
+
+const mappings = new OffsetMappings(consumer, generatedCode, originalCode);
+if (!mappings.hasSourceId(desiredSourceId)) {
+    console.log(chalk.red(`No mappings for ${desiredSourceId} in this mapping file`));
+    console.log("Found the following source IDs:");
+    mappings.getSourceIds().forEach(id => console.log("- " + id));
+    process.exit(1);
+}
+
+console.log(`--> mappings for ${desiredSourceId}`);
 
 const generatedOffsets = new GeneratedOffsets(mappings);
 
