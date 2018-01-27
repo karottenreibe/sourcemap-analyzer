@@ -27,18 +27,16 @@ class SourceCode {
 
 }
 
-const sourceMapFile = process.argv[2]
-const generatedFile = process.argv[3]
-const sourceFile = process.argv[4]
-const desiredSourceId = process.argv[5]
+const generatedFile = process.argv[2];
+const sourceMapFile = process.argv[2] + ".map";
+const sourceFile = process.argv[3];
+const desiredSourceId = process.argv[4];
 
 const rawSourceMap = JSON.parse(fs.readFileSync(sourceMapFile, 'utf8'));
 const consumer = new SourceMapConsumer(rawSourceMap);
 
 const originalCode = new SourceCode(fs.readFileSync(sourceFile, 'utf8').toString());
 const generatedCode = new SourceCode(fs.readFileSync(generatedFile, 'utf8').toString());
-
-console.log(`--> mappings for ${desiredSourceId}`);
 
 class OffsetMappings {
 
@@ -57,8 +55,10 @@ class OffsetMappings {
             }
         }
 
+        this.sourceIds = {};
         this.mappings = [];
         consumer.eachMapping(({source, generatedLine, generatedColumn, originalLine, originalColumn}) => {
+            this.sourceIds[source] = true;
             this.mappings.push({
                 sourceId : source,
                 generatedOffset: this.generatedLineStartOffsets[generatedLine - 1] + generatedColumn,
@@ -67,6 +67,14 @@ class OffsetMappings {
         });
 
         this.mappings.sort((a, b) => a.originalOffset - b.originalOffset);
+    }
+
+    hasSourceId(sourceId) {
+        return this.sourceIds[sourceId] || false;
+    }
+
+    getSourceIds() {
+        return Object.keys(this.sourceIds);
     }
 
     getOriginalLine(originalOffset) {
@@ -89,6 +97,14 @@ class OffsetMappings {
 }
 
 const mappings = new OffsetMappings(consumer, generatedCode, originalCode);
+if (!mappings.hasSourceId(desiredSourceId)) {
+    console.log(chalk.red(`No mappings for ${desiredSourceId} in this mapping file`));
+    console.log("Found the following source IDs:");
+    mappings.getSourceIds().forEach(id => console.log("- " + id));
+    process.exit(1);
+}
+
+console.log(`--> mappings for ${desiredSourceId}`);
 
 class GeneratedOffsets {
 
