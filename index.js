@@ -22,16 +22,15 @@ class SourceCode {
     }
 
     subString(inclusiveStartOffset, exclusiveEndOffset) {
-        // todo check
         return this.code.substring(inclusiveStartOffset, exclusiveEndOffset);
     }
 
 }
 
-const sourceMapFile = "output.js.map"
-const generatedFile = "output.js"
-const sourceFile = "RedPill.ts"
-const desiredSourceId = "webpack:///src/RedPill.ts"
+const sourceMapFile = process.argv[2]
+const generatedFile = process.argv[3]
+const sourceFile = process.argv[4]
+const desiredSourceId = process.argv[5]
 
 const rawSourceMap = JSON.parse(fs.readFileSync(sourceMapFile, 'utf8'));
 const consumer = new SourceMapConsumer(rawSourceMap);
