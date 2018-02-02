@@ -128,60 +128,62 @@ class GeneratedOffsets {
 
 }
 
-const generatedFile = process.argv[2];
-const sourceMapFile = process.argv[2] + ".map";
-const sourceFile = process.argv[3];
-const desiredSourceId = process.argv[4];
+module.exports = function show(args) {
+    const generatedFile = args[0];
+    const sourceMapFile = args[0] + ".map";
+    const sourceFile = args[1];
+    const desiredSourceId = args[2];
 
-const rawSourceMap = JSON.parse(fs.readFileSync(sourceMapFile, 'utf8'));
-const consumer = new SourceMapConsumer(rawSourceMap);
+    const rawSourceMap = JSON.parse(fs.readFileSync(sourceMapFile, 'utf8'));
+    const consumer = new SourceMapConsumer(rawSourceMap);
 
-const originalCode = new SourceCode(fs.readFileSync(sourceFile, 'utf8').toString());
-const generatedCode = new SourceCode(fs.readFileSync(generatedFile, 'utf8').toString());
+    const originalCode = new SourceCode(fs.readFileSync(sourceFile, 'utf8').toString());
+    const generatedCode = new SourceCode(fs.readFileSync(generatedFile, 'utf8').toString());
 
-const mappings = new OffsetMappings(consumer, generatedCode, originalCode);
-if (!mappings.hasSourceId(desiredSourceId)) {
-    console.log(chalk.red(`No mappings for ${desiredSourceId} in this mapping file`));
-    console.log("Found the following source IDs:");
-    mappings.getSourceIds().forEach(id => console.log("- " + id));
-    process.exit(1);
-}
-
-console.log(`--> mappings for ${desiredSourceId}`);
-
-const generatedOffsets = new GeneratedOffsets(mappings);
-
-originalCode.eachLineNumber(currentLine => {
-
-    const prefix = pad(currentLine + ":", 4);
-    const originalSnippet = chalk.green(originalCode.line(currentLine));
-    console.log(prefix + originalSnippet);
-
-    let startOffset = Infinity;
-    let endOffset = 0;
-    mappings.each(({sourceId, generatedOffset, originalOffset}) => {
-        if (sourceId !== desiredSourceId) {
-            return;
-        }
-
-        const originalLine = mappings.getOriginalLine(originalOffset);
-        if (originalLine !== currentLine) {
-            return;
-        }
-
-        startOffset = Math.min(startOffset, generatedOffset);
-
-        const generatedEndOffset = generatedOffsets.getExclusiveEndOffset(generatedOffset);
-        endOffset = Math.max(endOffset, generatedEndOffset);
-        const generatedSnippet = chalk.blue(generatedCode.subString(generatedOffset, generatedEndOffset));
-        console.log(" | " + generatedSnippet);
-    });
-
-    if (startOffset === Infinity) {
-        return;
+    const mappings = new OffsetMappings(consumer, generatedCode, originalCode);
+    if (!mappings.hasSourceId(desiredSourceId)) {
+        console.log(chalk.red(`No mappings for ${desiredSourceId} in this mapping file`));
+        console.log("Found the following source IDs:");
+        mappings.getSourceIds().forEach(id => console.log("- " + id));
+        process.exit(1);
     }
 
-    const generatedSnippet = chalk.blue(generatedCode.subString(startOffset, endOffset));
-    console.log(" > " + generatedSnippet);
-});
+    console.log(`--> mappings for ${desiredSourceId}`);
+
+    const generatedOffsets = new GeneratedOffsets(mappings);
+
+    originalCode.eachLineNumber(currentLine => {
+
+        const prefix = pad(currentLine + ":", 4);
+        const originalSnippet = chalk.green(originalCode.line(currentLine));
+        console.log(prefix + originalSnippet);
+
+        let startOffset = Infinity;
+        let endOffset = 0;
+        mappings.each(({sourceId, generatedOffset, originalOffset}) => {
+            if (sourceId !== desiredSourceId) {
+                return;
+            }
+
+            const originalLine = mappings.getOriginalLine(originalOffset);
+            if (originalLine !== currentLine) {
+                return;
+            }
+
+            startOffset = Math.min(startOffset, generatedOffset);
+
+            const generatedEndOffset = generatedOffsets.getExclusiveEndOffset(generatedOffset);
+            endOffset = Math.max(endOffset, generatedEndOffset);
+            const generatedSnippet = chalk.blue(generatedCode.subString(generatedOffset, generatedEndOffset));
+            console.log(" | " + generatedSnippet);
+        });
+
+        if (startOffset === Infinity) {
+            return;
+        }
+
+        const generatedSnippet = chalk.blue(generatedCode.subString(startOffset, endOffset));
+        console.log(" > " + generatedSnippet);
+    });
+}
 
