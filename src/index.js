@@ -1,4 +1,5 @@
 const show = require('./show');
+const resolve = require('./resolve');
 
 const args = process.argv;
 const command = args[2];
