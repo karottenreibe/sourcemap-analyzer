@@ -2,6 +2,8 @@ Helps you debug sourcemap problems.
 
 # Prerequisites
 
+Run `npm i` to install dependencies.
+
 For all commands, you'll need both the generated source file and its source map, e.g.
 `main.js` and `main.js.map`. The source map must be named exactly like the generated JS
 file and have the `.map` suffix.
