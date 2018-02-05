@@ -14,10 +14,14 @@ know the ID, leave out this parameter and the tool will print a list of all avai
 
     node src/index.js show main.js article-actions.component.js src/js/article/article-actions.component.js
 
+![Output of the show command](https://raw.githubusercontent.com/karottenreibe/sourcemap-analyzer/master/show-command.png)
+
 # Resolve positions from the generated source back to original source file locations
 
 Use the `resolve` command and pass the path to the generated source file, a 1-based line number and a 0-based column
 number.
 
     node src/index.js resolve main.js 8 6623
+
+![Output of the resolve command](https://raw.githubusercontent.com/karottenreibe/sourcemap-analyzer/master/resolve-command.png)
 
