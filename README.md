@@ -22,6 +22,10 @@ For each original source line, it will print all generated source snippets that 
 It will also print the entire code between the first and the last snippet (prefixed with `>`) which may contain code from other
 source lines or code that is purely compiler-generated.
 
+![Errors detected by the show command](https://raw.githubusercontent.com/karottenreibe/sourcemap-analyzer/master/show-command-error.png)
+
+If errors are detected in the source map for that original source file, they are printed at the end.
+
 # Resolve positions from the generated source back to original source file locations
 
 Use the `resolve` command and pass the path to the generated source file, a 1-based line number and a 0-based column
