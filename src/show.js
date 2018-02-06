@@ -29,7 +29,7 @@ class OffsetMappings {
             this.sourceIds[source] = true;
             this.mappings.push({
                 sourceId : source,
-                generatedOffset: this.generatedLineStartOffsets[generatedLine - 1] + generatedColumn,
+                generatedOffset: this.getGeneratedOffset(generatedLine, generatedColumn),
                 originalOffset: this.originalLineStartOffsets[originalLine - 1] + originalColumn,
             });
         });
@@ -43,6 +43,10 @@ class OffsetMappings {
 
     getSourceIds() {
         return Object.keys(this.sourceIds);
+    }
+
+    getGeneratedOffset(generatedLine, generatedColumn) {
+        return this.generatedLineStartOffsets[generatedLine - 1] + generatedColumn;
     }
 
     getOriginalLine(originalOffset) {
@@ -164,5 +168,32 @@ module.exports = function show(args) {
         const generatedSnippet = chalk.blue(generatedCode.subString(startOffset, endOffset));
         console.log(" > " + generatedSnippet);
     });
+
+    const lastLineInOriginalFile = originalCode.lines.length + 1;
+    const erroneousMappings = [];
+    consumer.eachMapping(mapping => {
+        if (mapping.source !== desiredSourceId) {
+            return;
+        }
+        if (mapping.originalLine > lastLineInOriginalFile) {
+            erroneousMappings.push(mapping);
+        }
+    });
+
+    if (erroneousMappings.length > 0) {
+        console.log(chalk.red("Source map contains mappings to lines that don't exist in the original source:"));
+
+        for ({source, originalLine, generatedLine, generatedColumn} of erroneousMappings) {
+            console.log(chalk.red(`Generated line ${generatedLine}, column ${generatedColumn} mapped to original line ${originalLine}`));
+
+            const startOffset = mappings.getGeneratedOffset(generatedLine, generatedColumn);
+            const endOffset = generatedOffsets.getExclusiveEndOffset(startOffset);
+            const generatedSnippet = chalk.blue(generatedCode.subString(startOffset, endOffset));
+            console.log(" | " + generatedSnippet);
+        }
+
+        console.log(chalk.red("This likely means that your source maps are not correct." +
+            " Most likely, one part of your build pipeline is not updating the source maps but generating additional code."));
+    }
 };
 
